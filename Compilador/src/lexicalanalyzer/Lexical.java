@@ -1,4 +1,4 @@
-package lexicalanalys;
+package lexicalanalyzer;
 
 import java.util.ArrayList;
 
@@ -13,6 +13,14 @@ public class Lexical {
 		this.content = content;
 		this.index = 0;
 		this.analyzing();
+	}
+
+	public int size(){
+		return tokens.size();
+	}
+
+	public Token nextToken(int i){
+		return tokens.get(i);
 	}
 
 	public boolean isLetter(char c) {
@@ -51,29 +59,30 @@ public class Lexical {
 					state = 1;
 				} else if (this.isDigit(c)) {
 					str.append(c);
-					state = 3;
+					state = 2;
 				} else if (c == '\'') {
 					str.append(c);
-					state = 6;
+					state = 5;
 				} else if (c == '(' || c == ')' || c == '{' || c == '}' || c == ',' || c == ';') {
 					str.append(c);
-					state = 9;
+					state = 8;
 				} else if (c == '+' || c == '-' || c == '*' || c == '/') {
 					str.append(c);
-					state = 10;
+					state = 9;
 				} else if (c == '>' || c == '<' || c == '!') {
 					str.append(c);
-					state = 11;
+					state = 10;
 				} else if (c == '=') {
 					str.append(c);
-					state = 13;
+					state = 12;
 				} else if (c == '\\') {
 					str.append(c);
-					state = 14;
+					state = 13;
 				} else if (c == '$') {
 					state = 777;
 				} else {
-					throw new RuntimeException("Error: invalid term \"" + str.toString() + "\"");
+					str.append(c);
+					throw new LexicalException("Que ideia é essa? \"" + str.toString() + "\"");
 				}
 				break;
 			case 1:
@@ -99,13 +108,13 @@ public class Lexical {
 					state = 0;
 				}
 				break;
-			case 3:
+			case 2:
 				if (this.isDigit(c)) {
 					str.append(c);
-					state = 3;
+					state = 2;
 				} else if (c == '.') {
 					str.append(c);
-					state = 4;
+					state = 3;
 				} else {
 					this.backChar();
 					tokens.add(new Token(str.toString(), Type.INT));
@@ -113,18 +122,18 @@ public class Lexical {
 					state = 0;
 				}
 				break;
+			case 3:
+				if (this.isDigit(c)) {
+					str.append(c);
+					state = 4;
+				} else {
+					throw new LexicalException("Ei boy, esse float \"" + str.toString() + "\" ta embaçado");
+				}
+				break;
 			case 4:
 				if (this.isDigit(c)) {
 					str.append(c);
-					state = 5;
-				} else {
-					throw new RuntimeException("Error: invalid term \"" + str.toString() + "\"");
-				}
-				break;
-			case 5:
-				if (this.isDigit(c)) {
-					str.append(c);
-					state = 5;
+					state = 4;
 				} else {
 					this.backChar();
 					tokens.add(new Token(str.toString(), Type.FLOAT));
@@ -132,44 +141,44 @@ public class Lexical {
 					state = 0;
 				}
 				break;
-			case 6:
+			case 5:
 				if (this.isDigit(c) || this.isLetter(c)) {
+					str.append(c);
+					state = 6;
+				} else {
+					throw new LexicalException("Ei boy, esse char \"" + str.toString() + "\" ta inválido, tá ligado?!");
+				}
+				break;
+			case 6:
+				if (c == '\'') {
 					str.append(c);
 					state = 7;
 				} else {
-					throw new RuntimeException("Error: invalid term \"" + str.toString() + "\"");
+					throw new LexicalException("Ei boy, esse char \"" + str.toString() + "\" é inválido, tá ligado?!");
 				}
 				break;
 			case 7:
-				if (c == '\'') {
-					str.append(c);
-					state = 8;
-				} else {
-					throw new RuntimeException("Error: invalid term \"" + str.toString() + "\"");
-				}
-				break;
-			case 8:
 				this.backChar();
 				tokens.add(new Token(str.toString(), Type.CHAR));
 				str = new StringBuffer();
 				state = 0;
 				break;
-			case 9:
+			case 8:
 				this.backChar();
 				tokens.add(new Token(str.toString(), Type.SPECIAL_CHARACTER));
 				str = new StringBuffer();
 				state = 0;
 				break;
-			case 10:
+			case 9:
 				this.backChar();
 				tokens.add(new Token(str.toString(), Type.ARITHMETIC_OPERATOR));
 				str = new StringBuffer();
 				state = 0;
 				break;
-			case 11:
+			case 10:
 				if (c == '=') {
 					str.append(c);
-					state = 12;
+					state = 11;
 				} else {
 					if (str.toString().compareTo("!") == 0) {
 						this.backChar();
@@ -184,16 +193,16 @@ public class Lexical {
 					}
 				}
 				break;
-			case 12:
+			case 11:
 				this.backChar();
 				tokens.add(new Token(str.toString(), Type.RELATIONAL_OPERATOR));
 				str = new StringBuffer();
 				state = 0;
 				break;
-			case 13:
+			case 12:
 				if (c == '=') {
 					str.append(c);
-					state = 12;
+					state = 11;
 				} else {
 					this.backChar();
 					tokens.add(new Token(str.toString(), Type.ASSIGNMENT_OPERATOR));
@@ -201,18 +210,18 @@ public class Lexical {
 					state = 0;
 				}
 				break;
-			case 14:
+			case 13:
 				if (c == '\\') {
 					str.append(c);
-					state = 15;
+					state = 14;
 				} else if (c == '*') {
 					str.append(c);
-					state = 16;
+					state = 15;
 				} else {
-					throw new RuntimeException("Error: invalid term \"" + str.toString() + "\"");
+					throw new LexicalException("Se isso \"" + str.toString() + "\" foi uma tentativa de comentario, ta tudo errado");
 				}
 				break;
-			case 15:
+			case 14:
 				if (c == '\r' || c == '$') {
 					this.backChar();
 					tokens.add(new Token(str.toString(), Type.COMMENT));
@@ -220,29 +229,29 @@ public class Lexical {
 					state = 0;
 				} else {
 					str.append(c);
+					state = 14;
+				}
+				break;
+			case 15:
+				if (c == '*') {
+					str.append(c);
+					state = 16;
+				} else if(c == '$'){
+					throw new LexicalException("Se isso \"" + str.toString() + "\" foi uma tentativa de comentario, ta tudo errado");
+				} else {
+					str.append(c);
 					state = 15;
 				}
 				break;
 			case 16:
-				if (c == '*') {
+				if (c == '\\') {
 					str.append(c);
 					state = 17;
-				} else if(c == '$'){
-					throw new RuntimeException("Error: invalid term \"" + str.toString() + "\"");
-				} else {
-					str.append(c);
-					state = 16;
+				}else {
+					throw new LexicalException("Se isso \"" + str.toString() + "\" foi uma tentativa de comentario, ta tudo errado");
 				}
 				break;
 			case 17:
-				if (c == '\\') {
-					str.append(c);
-					state = 18;
-				}else {
-					throw new RuntimeException("Error: invalid term \"" + str.toString() + "\"");
-				}
-				break;
-			case 18:
 				this.backChar();
 				tokens.add(new Token(str.toString(), Type.COMMENT_BLOCK));
 				str = new StringBuffer();

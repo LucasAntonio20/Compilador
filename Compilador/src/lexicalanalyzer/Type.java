@@ -1,4 +1,4 @@
-package lexicalanalys;
+package lexicalanalyzer;
 
 public enum Type {
 
