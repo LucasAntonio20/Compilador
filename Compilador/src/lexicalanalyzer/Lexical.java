@@ -1,26 +1,22 @@
 package lexicalanalyzer;
 
-import java.util.ArrayList;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class Lexical {
     
-    ArrayList<Token> tokens = new ArrayList<>();
-
 	private char[] content;
 	private int index;
 
-	public Lexical(char[] content) {
-		this.content = content;
-		this.index = 0;
-		this.analyzing();
-	}
-
-	public int size(){
-		return tokens.size();
-	}
-
-	public Token nextToken(int i){
-		return tokens.get(i);
+	public Lexical(String path){
+		try {
+            String conteudoStr = new String(Files.readAllBytes(Paths.get(path)));
+            this.content = conteudoStr.toCharArray();
+			this.index = 0;
+        } catch (IOException e) {
+            System.out.println("Error: Arquivo " + e.getMessage() + " não encontrado");
+        }
 	}
 
 	public boolean isLetter(char c) {
@@ -43,7 +39,8 @@ public class Lexical {
 		return index < this.content.length;
 	}
 
-	public void analyzing() {
+	public Token nextToken() {
+		Token token = null;
 		char c;
 		int state = 0;
 
@@ -79,7 +76,9 @@ public class Lexical {
 					str.append(c);
 					state = 13;
 				} else if (c == '$') {
+					str.append(c);
 					state = 777;
+					this.backChar();
 				} else {
 					str.append(c);
 					throw new LexicalException("Que ideia é essa? \"" + str.toString() + "\"");
@@ -96,16 +95,14 @@ public class Lexical {
 							|| str.toString().compareTo("int") == 0 || str.toString().compareTo("float") == 0
 							|| str.toString().compareTo("char") == 0 || str.toString().compareTo("boolean") == 0) {
 						this.backChar();
-						tokens.add(new Token(str.toString(), Type.RESERVED_WORD));
+						return new Token(str.toString(), Type.RESERVED_WORD);
 					} else if(str.toString().compareTo("true") == 0|| str.toString().compareTo("false") == 0){
 						this.backChar();
-						tokens.add(new Token(str.toString(), Type.BOOLEAN));
+						return new Token(str.toString(), Type.BOOLEAN);
 					}else {
 						this.backChar();
-						tokens.add(new Token(str.toString(), Type.IDENTIFIER));
+						return new Token(str.toString(), Type.IDENTIFIER);
 					}
-					str = new StringBuffer();
-					state = 0;
 				}
 				break;
 			case 2:
@@ -117,9 +114,7 @@ public class Lexical {
 					state = 3;
 				} else {
 					this.backChar();
-					tokens.add(new Token(str.toString(), Type.INT));
-					str = new StringBuffer();
-					state = 0;
+					return new Token(str.toString(), Type.INT);
 				}
 				break;
 			case 3:
@@ -136,9 +131,7 @@ public class Lexical {
 					state = 4;
 				} else {
 					this.backChar();
-					tokens.add(new Token(str.toString(), Type.FLOAT));
-					str = new StringBuffer();
-					state = 0;
+					return new Token(str.toString(), Type.FLOAT);
 				}
 				break;
 			case 5:
@@ -159,22 +152,13 @@ public class Lexical {
 				break;
 			case 7:
 				this.backChar();
-				tokens.add(new Token(str.toString(), Type.CHAR));
-				str = new StringBuffer();
-				state = 0;
-				break;
+				return new Token(str.toString(), Type.CHAR);
 			case 8:
 				this.backChar();
-				tokens.add(new Token(str.toString(), Type.SPECIAL_CHARACTER));
-				str = new StringBuffer();
-				state = 0;
-				break;
+				return new Token(str.toString(), Type.SPECIAL_CHARACTER);
 			case 9:
 				this.backChar();
-				tokens.add(new Token(str.toString(), Type.ARITHMETIC_OPERATOR));
-				str = new StringBuffer();
-				state = 0;
-				break;
+				return new Token(str.toString(), Type.ARITHMETIC_OPERATOR);
 			case 10:
 				if (c == '=') {
 					str.append(c);
@@ -182,32 +166,23 @@ public class Lexical {
 				} else {
 					if (str.toString().compareTo("!") == 0) {
 						this.backChar();
-						tokens.add(new Token(str.toString(), Type.CONDITION_INVERTER));
-						str = new StringBuffer();
-						state = 0;
+						return new Token(str.toString(), Type.CONDITION_INVERTER);
 					} else {
 						this.backChar();
-						tokens.add(new Token(str.toString(), Type.RELATIONAL_OPERATOR));
-						str = new StringBuffer();
-						state = 0;
+						return new Token(str.toString(), Type.RELATIONAL_OPERATOR);
 					}
 				}
 				break;
 			case 11:
 				this.backChar();
-				tokens.add(new Token(str.toString(), Type.RELATIONAL_OPERATOR));
-				str = new StringBuffer();
-				state = 0;
-				break;
+				return new Token(str.toString(), Type.RELATIONAL_OPERATOR);
 			case 12:
 				if (c == '=') {
 					str.append(c);
 					state = 11;
 				} else {
 					this.backChar();
-					tokens.add(new Token(str.toString(), Type.ASSIGNMENT_OPERATOR));
-					str = new StringBuffer();
-					state = 0;
+					return new Token(str.toString(), Type.ASSIGNMENT_OPERATOR);
 				}
 				break;
 			case 13:
@@ -224,9 +199,7 @@ public class Lexical {
 			case 14:
 				if (c == '\r' || c == '$') {
 					this.backChar();
-					tokens.add(new Token(str.toString(), Type.COMMENT));
-					str = new StringBuffer();
-					state = 0;
+					return new Token(str.toString(), Type.COMMENT);
 				} else {
 					str.append(c);
 					state = 14;
@@ -253,23 +226,20 @@ public class Lexical {
 				break;
 			case 17:
 				this.backChar();
-				tokens.add(new Token(str.toString(), Type.COMMENT_BLOCK));
-				str = new StringBuffer();
-				state = 0;
-				break;
+				return new Token(str.toString(), Type.COMMENT_BLOCK);
 			case 777:
-				tokens.add(new Token(str.toString(), Type.END_CODE));
-				break;
+				return new Token(str.toString(), Type.END_CODE);
 			default:
 				break;
 			}
 		}
-
-	}
+return token;
+}
 
 	public void printTokens() {
-		for (Token t : tokens) {
-			System.out.println(t);
-		}
+		Token t = null;
+        while((t = this.nextToken()) != null){
+            System.out.println(t.toString());
+        }
 	}
 }
