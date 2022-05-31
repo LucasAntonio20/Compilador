@@ -1,1 +1,3 @@
-int main(){int va_ca;}$
+int main(){int va_ca;
+ va_ca = (1 * 5) / 2;
+}$

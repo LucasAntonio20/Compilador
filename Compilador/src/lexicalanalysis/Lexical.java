@@ -1,4 +1,4 @@
-package lexicalanalyzer;
+package lexicalanalysis;
 
 import java.io.IOException;
 import java.nio.file.Files;
