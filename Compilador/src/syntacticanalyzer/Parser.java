@@ -14,26 +14,27 @@ public class Parser {
 	}
 
 	public void program() {
-		this.token = this.lexical.nextToken();
+		token = lexical.nextToken();
 		if (!token.getContent().equals("int")) {
 			throw new ParserException("Presta atenção no int do começo!");
 		}
 
-		this.token = this.lexical.nextToken();
+		token = lexical.nextToken();
 		if (!token.getContent().equals("main")) {
 			throw new ParserException("Esquecesse do main tabacudo!");
 		}
 
-		this.token = this.lexical.nextToken();
+		token = lexical.nextToken();
 		if (!token.getContent().equals("(")) {
 			throw new ParserException("Abre o parêntese do main direito boy!");
 		}
 
-		this.token = this.lexical.nextToken();
+		token = lexical.nextToken();
 		if (!token.getContent().equals(")")) {
 			throw new ParserException("Feche o parêntese do main direito boy!");
 		}
 
+		this.token = this.lexical.nextToken();
 		this.block();
 
 		this.token = this.lexical.nextToken();
@@ -45,21 +46,21 @@ public class Parser {
 	}
 
 	private void block() {
-		this.token = this.lexical.nextToken();
 		if (!token.getContent().equals("{")) {
 			throw new ParserException("Abre a chave, tabacudo!");
 		}
 
 		this.token = this.lexical.nextToken();
-		//do {
+		do {
 			this.variableDeclaration();
 			this.token = this.lexical.nextToken();
-			//this.comment();
-			//this.token = this.lexical.nextToken();
-		//} while (!this.token.getContent().equals("}"));
-
-		this.command();
-		this.token = this.lexical.nextToken();
+		} while (isType());
+		do {
+			this.command();
+			this.token = this.lexical.nextToken();
+		} while (token.getContent().equals("if") || token.getContent().equals("while")
+		         || isType() || token.getContent().equals("{"));
+		
 
 		if (!token.getContent().equals("}")) {
 			throw new ParserException("Fecha a chave, tabacudo!");
@@ -67,11 +68,129 @@ public class Parser {
 	}
 
 	private void command() {
-		this.basicCommand();
+		if(this.token.getContent().equals("{") || this.token.getType() == Type.IDENTIFIER){
+			this.basicCommand();
+		}else if (this.token.getContent().equals("while")){
+			this.iteration();
+		}else if (this.token.getContent().equals("if")) {
+			this.token = this.lexical.nextToken();
+		    if (!token.getContent().equals("(")) {
+			throw new ParserException("Abre o parêntese do if direito boy!");
+		    }
+
+			this.token = this.lexical.nextToken();
+		    if (token.getType() == Type.CONDITION_INVERTER) {
+				this.token = this.lexical.nextToken();
+			    if (token.getType() != Type.IDENTIFIER) {
+					throw new ParserException("Tem que ter uma variavel depois do inversor do if, abestado!");
+				}
+			this.token = this.lexical.nextToken();
+		    }else if(token.getType() == Type.BOOLEAN){
+				this.token = this.lexical.nextToken();
+			}else{
+				this.relationalExpression();
+			}
+
+		    if (!token.getContent().equals(")")) {
+			throw new ParserException("Fecha o parêntese do if direito boy!");
+		    }
+
+			this.token = this.lexical.nextToken();
+			if (!this.token.getContent().equals("{")) {
+				throw new ParserException("O { do if tabacudo!");
+			}
+
+			this.token = this.lexical.nextToken();
+			this.command();
+
+			this.token = this.lexical.nextToken();
+			if (!this.token.getContent().equals("}")) {
+				throw new ParserException("O } do if tabacudo!");
+			}
+
+			this.token = this.lexical.nextToken();
+			if (!this.token.getContent().equals("else")) {
+				throw new ParserException("Tu esqueceu o else meu irmão!");
+			}
+
+			this.token = this.lexical.nextToken();
+			if (!this.token.getContent().equals("{")) {
+				throw new ParserException("O { do else tabacudo!");
+			}
+
+			this.token = this.lexical.nextToken();
+			this.command();
+
+			this.token = this.lexical.nextToken();
+			if (!this.token.getContent().equals("}")) {
+				throw new ParserException("O } do else tabacudo!");
+			}
+		}else{
+			throw new ParserException("Que comando é esse boy?");
+		}
+		
+	}
+
+	private void iteration() {
+		if (!this.token.getContent().equals("while")){
+			throw new ParserException("Barril, tá faltando o while!");
+		}
+
+		this.token = this.lexical.nextToken();
+		if (!token.getContent().equals("(")) {
+			throw new ParserException("Abre o parêntese do while direito boy!");
+		}
+
+		this.token = this.lexical.nextToken();
+		if (token.getType() == Type.CONDITION_INVERTER) {
+			this.token = this.lexical.nextToken();
+			if (token.getType() != Type.IDENTIFIER) {
+				throw new ParserException("Tem que ter uma variavel depois do inversor do while, abestado!");
+			}
+			this.token = this.lexical.nextToken();
+		}else if(token.getType() == Type.BOOLEAN){
+			this.token = this.lexical.nextToken();
+		}else{
+			this.relationalExpression();
+		}
+
+		if (!token.getContent().equals(")")) {
+			throw new ParserException("Fecha o parêntese do while direito boy!");
+		}
+
+		this.token = this.lexical.nextToken();
+			if (!this.token.getContent().equals("{")) {
+				throw new ParserException("O { do while tabacudo!");
+		}
+
+		this.token = this.lexical.nextToken();
+		this.command();
+
+		this.token = this.lexical.nextToken();
+			if (!this.token.getContent().equals("}")) {
+				throw new ParserException("O } do while tabacudo!");
+		}
+	}
+
+	private void relationalExpression() {
+		this.arithmeticExpression();
+
+		if (token.getType() != Type.RELATIONAL_OPERATOR) {
+			throw new ParserException("Operador relacional errado!");
+		}
+
+		this.token = this.lexical.nextToken();
+		this.arithmeticExpression();
 	}
 
 	private void basicCommand() {
-		this.allocation();
+		if (token.getContent().equals("{")) {
+			this.block();
+		}else if(token.getType() == Type.IDENTIFIER){
+			this.allocation();
+		}else{
+			throw new ParserException("Ei tabacudo tá faltando uma atribuição ou um abertura de bloco!");
+		}
 	}
 
 	private void allocation() {
@@ -83,7 +202,9 @@ public class Parser {
 			throw new ParserException("Tá faltando um \"=\" boy!");
 		}
 
+		this.token = this.lexical.nextToken();
 		this.arithmeticExpression();
+
 
 		if (!token.getContent().equals(";")) {
 			throw new ParserException("Faltou o ; da atribuição, donzelo!");
@@ -91,8 +212,7 @@ public class Parser {
 	}
 
 	private void arithmeticExpression() {
-		this.token = this.lexical.nextToken();
-		if ((token.getContent().equals("true") || (token.getContent().equals("false")))) {
+		if (this.token.getType() == Type.BOOLEAN) {
 			this.token = this.lexical.nextToken();
 			return;
 		}
@@ -111,11 +231,14 @@ public class Parser {
 			this.coefficient();
 			this.token = this.lexical.nextToken();
 		}
-	}
+	}	
+	
 
 	private void coefficient() {
 		if (token.getContent().equals("(")){
+			this.token = this.lexical.nextToken();
 		    this.arithmeticExpression();
+
 		    if (!token.getContent().equals(")")) {
 			throw new ParserException("Feche o parêntese direito boy!");
 		    }
@@ -126,18 +249,14 @@ public class Parser {
 		
 	}
 
-	private void comment() {
-		if (token.getType() != Type.COMMENT || token.getType() != Type.COMMENT_BLOCK) {
-			throw new ParserException("Faz um comentario certo tabacudo!");
-		}
-	}
-
 	private void variableDeclaration() {
 		this.type();
+
 		this.token = this.lexical.nextToken();
 		if (token.getType() != Type.IDENTIFIER) {
 			throw new ParserException("A declaração de variável tá errada!");
 		}
+
 		this.token = this.lexical.nextToken();
 		if (!token.getContent().equals(";")) {
 			throw new ParserException("Faltou o ; da variável, donzelo!");
@@ -145,9 +264,15 @@ public class Parser {
 	}
 
 	private void type(){
-		if (!(token.getContent().equals("int") || token.getContent().equals("float")
-		|| token.getContent().equals("char") || token.getContent().equals("boolean"))) {
+		if (!isType()) {
 			throw new ParserException("Deu erro na declaração de variável boy");
 		}
+	}
+
+	private boolean isType(){
+		if (this.token.getContent().equals("int") || this.token.getContent().equals("float")
+		|| this.token.getContent().equals("char") || this.token.getContent().equals("boolean"))
+		return true;
+		return false;
 	}
 }
