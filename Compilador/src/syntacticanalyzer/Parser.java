@@ -14,7 +14,12 @@ public class Parser {
 	}
 
 	public void program() {
-		token = lexical.nextToken();
+
+		this.token = this.lexical.nextToken();
+		if (this.token.getType() == Type.COMMENT || this.token.getType() == Type.COMMENT_BLOCK) {
+			this.token = this.lexical.nextToken();
+		}
+
 		if (!token.getContent().equals("int")) {
 			throw new ParserException("Presta atenção no int do começo!");
 		}

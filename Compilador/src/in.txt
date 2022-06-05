@@ -1,8 +1,5 @@
+\\Exemplo de um codigo aceito
 int main(){
-    int va_ca;
-    boolean diego;
-    va_ca = (1 * 5) / 2;
-    while(true) {
-    diego = 1;
-    }
+    int declarei_a_variavel;
+    agora_eu_to_fazendo_um_comando = 76 + 4;
 }$
