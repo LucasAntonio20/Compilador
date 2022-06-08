@@ -1,5 +1,11 @@
 \\Exemplo de um codigo aceito
 int main(){
-    int declarei_a_variavel;
-    agora_eu_to_fazendo_um_comando = 76 + 4;
+    int variavel;
+    variavel = 2;
+    if (variavel == 2) {
+        variavel = (2 * 2) / 4;
+    } else {
+        variavel = 0;
+    }
 }$
+
