@@ -3,14 +3,20 @@ package syntacticanalyzer;
 import lexicalanalysis.Lexical;
 import lexicalanalysis.Token;
 import lexicalanalysis.Type;
+import semanticanalysis.Semantic;
+import semanticanalysis.SemanticException;
 
 public class Parser {
 	
 	private Lexical lexical;
 	private Token token;
+	private Semantic[] variableList;
+	private int semanticSize;
 	
 	public Parser(Lexical lexical) {
 		this.lexical = lexical;
+		this.variableList = new Semantic[999];
+		this.semanticSize = 0;
 	}
 
 	public void program() {
@@ -31,12 +37,12 @@ public class Parser {
 
 		token = lexical.nextToken();
 		if (!token.getContent().equals("(")) {
-			throw new ParserException("Abre o parêntese do main direito boy!");
+			throw new SemanticException("Abre o parêntese do main direito boy!");
 		}
 
 		token = lexical.nextToken();
 		if (!token.getContent().equals(")")) {
-			throw new ParserException("Feche o parêntese do main direito boy!");
+			throw new SemanticException("Feche o parêntese do main direito boy!");
 		}
 
 		this.token = this.lexical.nextToken();
@@ -52,7 +58,7 @@ public class Parser {
 
 	private void block() {
 		if (!token.getContent().equals("{")) {
-			throw new ParserException("Abre a chave, tabacudo!");
+			throw new SemanticException("Abre a chave, tabacudo!");
 		}
 
 		this.token = this.lexical.nextToken();
@@ -68,7 +74,7 @@ public class Parser {
 		
 
 		if (!token.getContent().equals("}")) {
-			throw new ParserException("Fecha a chave, tabacudo!");
+			throw new SemanticException("Fecha a chave, tabacudo!");
 		}
 	}
 
@@ -80,7 +86,7 @@ public class Parser {
 		}else if (this.token.getContent().equals("if")) {
 			this.token = this.lexical.nextToken();
 		    if (!token.getContent().equals("(")) {
-			throw new ParserException("Abre o parêntese do if direito boy!");
+			throw new SemanticException("Abre o parêntese do if direito boy!");
 		    }
 
 			this.token = this.lexical.nextToken();
@@ -92,17 +98,20 @@ public class Parser {
 			this.token = this.lexical.nextToken();
 		    }else if(token.getType() == Type.BOOLEAN){
 				this.token = this.lexical.nextToken();
+				if (!token.getContent().equals(")")) {
+					throw new SemanticException("Depois de um booleano tem que fechar o parêntese!");
+				}
 			}else{
 				this.relationalExpression();
 			}
 
 		    if (!token.getContent().equals(")")) {
-			throw new ParserException("Fecha o parêntese do if direito boy!");
-		    }
+				throw new SemanticException("Fecha o parêntese do if direito boy!");
+			}
 
 			this.token = this.lexical.nextToken();
 			if (!this.token.getContent().equals("{")) {
-				throw new ParserException("O { do if tabacudo!");
+				throw new SemanticException("O { do if tabacudo!");
 			}
 
 			this.token = this.lexical.nextToken();
@@ -110,7 +119,7 @@ public class Parser {
 
 			this.token = this.lexical.nextToken();
 			if (!this.token.getContent().equals("}")) {
-				throw new ParserException("O } do if tabacudo!");
+				throw new SemanticException("O } do if tabacudo!");
 			}
 
 			this.token = this.lexical.nextToken();
@@ -120,7 +129,7 @@ public class Parser {
 
 			this.token = this.lexical.nextToken();
 			if (!this.token.getContent().equals("{")) {
-				throw new ParserException("O { do else tabacudo!");
+				throw new SemanticException("O { do else tabacudo!");
 			}
 
 			this.token = this.lexical.nextToken();
@@ -128,7 +137,7 @@ public class Parser {
 
 			this.token = this.lexical.nextToken();
 			if (!this.token.getContent().equals("}")) {
-				throw new ParserException("O } do else tabacudo!");
+				throw new SemanticException("O } do else tabacudo!");
 			}
 		}else{
 			throw new ParserException("Que comando é esse boy?");
@@ -143,7 +152,7 @@ public class Parser {
 
 		this.token = this.lexical.nextToken();
 		if (!token.getContent().equals("(")) {
-			throw new ParserException("Abre o parêntese do while direito boy!");
+			throw new SemanticException("Abre o parêntese do while direito boy!");
 		}
 
 		this.token = this.lexical.nextToken();
@@ -155,17 +164,20 @@ public class Parser {
 			this.token = this.lexical.nextToken();
 		}else if(token.getType() == Type.BOOLEAN){
 			this.token = this.lexical.nextToken();
+			if (!token.getContent().equals(")")) {
+				throw new SemanticException("Depois de um booleano tem que fechar o parêntese!");
+			}
 		}else{
 			this.relationalExpression();
 		}
 
 		if (!token.getContent().equals(")")) {
-			throw new ParserException("Fecha o parêntese do while direito boy!");
+			throw new SemanticException("Fecha o parêntese do while direito boy!");
 		}
 
 		this.token = this.lexical.nextToken();
 			if (!this.token.getContent().equals("{")) {
-				throw new ParserException("O { do while tabacudo!");
+				throw new SemanticException("O { do while tabacudo!");
 		}
 
 		this.token = this.lexical.nextToken();
@@ -173,7 +185,7 @@ public class Parser {
 
 		this.token = this.lexical.nextToken();
 			if (!this.token.getContent().equals("}")) {
-				throw new ParserException("O } do while tabacudo!");
+				throw new SemanticException("O } do while tabacudo!");
 		}
 	}
 
@@ -202,25 +214,33 @@ public class Parser {
 		if (token.getType() != Type.IDENTIFIER) {
 			throw new ParserException("A declaração de variável tá errada!");
 		}
+		Semantic aux = Semantic.exists(variableList, token.getContent());
+		if(aux == null){
+			throw new SemanticException("A variavel não existe tabacudo!");
+		}
+
 		this.token = this.lexical.nextToken();
 		if (!token.getContent().equals("=")) {
 			throw new ParserException("Tá faltando um \"=\" boy!");
 		}
 
 		this.token = this.lexical.nextToken();
-		this.arithmeticExpression();
-
-
-		if (!token.getContent().equals(";")) {
-			throw new ParserException("Faltou o ; da atribuição, donzelo!");
-		}
+		String auxTokenName = token.getContent();
+		if (aux.getType().equals("boolean") || aux.getType().equals("char")) {
+			Semantic.verifyAllocation(aux, token);
+			this.token = this.lexical.nextToken();
+			if (!token.getContent().equals(";")) {
+				throw new ParserException("Depois de um \"" + auxTokenName + "\" tem que ter o ponto e virgula!");
+			}
+		}else{
+			this.arithmeticExpression();
+			if (!token.getContent().equals(";")) {
+				throw new ParserException("Faltou o ; da atribuição, donzelo!");
+			}
+		}		
 	}
 
 	private void arithmeticExpression() {
-		if (this.token.getType() == Type.BOOLEAN) {
-			this.token = this.lexical.nextToken();
-			return;
-		}
 		this.term();
 		if(token.getContent().equals("+") || token.getContent().equals("-")){
 			this.token = this.lexical.nextToken();
@@ -245,9 +265,14 @@ public class Parser {
 		    this.arithmeticExpression();
 
 		    if (!token.getContent().equals(")")) {
-			throw new ParserException("Feche o parêntese direito boy!");
+			throw new SemanticException("Feche o parêntese direito boy!");
 		    }
-		} else if (this.token.getType() != Type.IDENTIFIER && this.token.getType() != Type.FLOAT
+		} else if (this.token.getType() == Type.IDENTIFIER) {
+			Semantic aux = Semantic.exists(variableList, token.getContent());
+		    if(aux == null){
+				throw new SemanticException("A variavel não existe tabacudo!");
+		    } 
+		}else if (this.token.getType() != Type.IDENTIFIER && this.token.getType() != Type.FLOAT
 		&& this.token.getType() != Type.INT && this.token.getType() != Type.CHAR) {
 			throw new ParserException("Escreve a funcao aritimetica certo!");
 		}
@@ -256,12 +281,17 @@ public class Parser {
 
 	private void variableDeclaration() {
 		this.type();
-
+		Token auxToken = token;
 		this.token = this.lexical.nextToken();
 		if (token.getType() != Type.IDENTIFIER) {
 			throw new ParserException("A declaração de variável tá errada!");
 		}
-
+		Semantic aux = Semantic.exists(variableList, token.getContent());
+		if(aux != null){
+			throw new SemanticException("E tu quer ter 2 variaveis iguais é bonitinho!");
+		}
+		variableList[semanticSize] = new Semantic(auxToken.getContent(), token.getContent());
+		semanticSize++;
 		this.token = this.lexical.nextToken();
 		if (!token.getContent().equals(";")) {
 			throw new ParserException("Faltou o ; da variável, donzelo!");
