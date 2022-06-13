@@ -1,11 +1,11 @@
 \\Exemplo de um codigo aceito
 int main(){
     char variavel;
-    variavel = 'a';
-    if (true) {
-        variavel = 'e';
+    variavel = '1';
+    if (1 + 1 == 2) {
+        variavel = 'a';
     } else {
-        variavel = 'i';
+        variavel = 'b';
     }
 }$
 

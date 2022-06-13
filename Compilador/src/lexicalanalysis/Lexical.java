@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import syntacticanalyzer.Parser;
+
 public class Lexical {
     
 	private char[] content;
@@ -14,6 +16,8 @@ public class Lexical {
             String conteudoStr = new String(Files.readAllBytes(Paths.get(path)));
             this.content = conteudoStr.toCharArray();
 			this.index = 0;
+			Parser syntactic = new Parser(this);
+			syntactic.program();
         } catch (IOException e) {
             System.out.println("Error: Arquivo " + e.getMessage() + " não encontrado");
         }

@@ -7,12 +7,11 @@ public class Semantic {
     
     private String type;
     private String content;
-    private int quantity;
 
     public Semantic(String type, String content){
         this.type = type;
         this.content = content;
-        quantity = 1;
+
     }
 
     public String getType() {
@@ -23,18 +22,37 @@ public class Semantic {
         return content;
     }
 
-    public void increase(){
-        this.quantity++;
+    public static Type verifyCalculation(Token[] tokens){
+        if (tokens[0] != null) {
+            int j = 0;
+            Token[] auxList = tokens;
+            for (int i = 0; i < auxList.length; i++) {
+                if (tokens[i] == null) break;
+                if (!tokens[i].getType().equals(auxList[j].getType())) {
+                    throw new SemanticException("Não pode calcular "+ auxList[j].getType() +" com "+tokens[i].getType());
+                }
+            }
+            return tokens[0].getType();
+        }
+        return null;
     }
 
-    public static void verifyAllocation(Semantic semantic, Token token){
+    public static void verifyAllocation(Semantic semantic, Type type){
         if(semantic.getType().equals("char")){
-            if (token.getType() != Type.CHAR) {
+            if (type != Type.CHAR) {
                 throw new SemanticException("Meu irmão á variavel \""+ semantic.getContent() +"\" é do tipo char!");
             }
         }else if(semantic.getType().equals("boolean")){
-            if (token.getType() != Type.BOOLEAN) {
+            if (type != Type.BOOLEAN) {
                 throw new SemanticException("Meu irmão á variavel \""+ semantic.getContent() +"\" é do tipo boolean!");
+            }
+        }else if(semantic.getType().equals("int")){
+            if (type != Type.INT) {
+                throw new SemanticException("Meu irmão á variavel \""+ semantic.getContent() +"\" é do tipo int!");
+            }
+        }else if(semantic.getType().equals("float")){
+            if (type != Type.FLOAT) {
+                throw new SemanticException("Meu irmão á variavel \""+ semantic.getContent() +"\" é do tipo float!");
             }
         }
     }

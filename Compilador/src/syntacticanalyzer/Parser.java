@@ -11,11 +11,15 @@ public class Parser {
 	private Lexical lexical;
 	private Token token;
 	private Semantic[] variableList;
+	private Token[] auxListTokens;
+	private int auxListTokensSize;
 	private int semanticSize;
 	
 	public Parser(Lexical lexical) {
 		this.lexical = lexical;
 		this.variableList = new Semantic[999];
+		this.auxListTokens = new Token[999];
+		this.auxListTokensSize = 0;
 		this.semanticSize = 0;
 	}
 
@@ -227,17 +231,26 @@ public class Parser {
 		this.token = this.lexical.nextToken();
 		String auxTokenName = token.getContent();
 		if (aux.getType().equals("boolean") || aux.getType().equals("char")) {
-			Semantic.verifyAllocation(aux, token);
+			Semantic.verifyAllocation(aux, token.getType());
 			this.token = this.lexical.nextToken();
 			if (!token.getContent().equals(";")) {
 				throw new ParserException("Depois de um \"" + auxTokenName + "\" tem que ter o ponto e virgula!");
 			}
 		}else{
 			this.arithmeticExpression();
+			Type auxType = Semantic.verifyCalculation(auxListTokens);
+			if (auxType == Type.INT || auxType == Type.FLOAT) {
+				Semantic.verifyAllocation(aux, auxType);
+			}else {
+				throw new SemanticException(aux.getType() + " Só pode receber " + aux.getType());
+			}
+			
 			if (!token.getContent().equals(";")) {
 				throw new ParserException("Faltou o ; da atribuição, donzelo!");
 			}
-		}		
+			dellList(auxListTokens);
+			auxListTokensSize = 0;
+		}
 	}
 
 	private void arithmeticExpression() {
@@ -275,6 +288,9 @@ public class Parser {
 		}else if (this.token.getType() != Type.IDENTIFIER && this.token.getType() != Type.FLOAT
 		&& this.token.getType() != Type.INT && this.token.getType() != Type.CHAR) {
 			throw new ParserException("Escreve a funcao aritimetica certo!");
+		}else if (this.token.getType() == Type.FLOAT || this.token.getType() == Type.INT){
+			auxListTokens[auxListTokensSize] = this.token;
+			auxListTokensSize++;
 		}
 		
 	}
@@ -309,5 +325,13 @@ public class Parser {
 		|| this.token.getContent().equals("char") || this.token.getContent().equals("boolean"))
 		return true;
 		return false;
+	}
+
+	public void dellList(Token[] list){
+		int i = 0;
+		while (list[i] != null) {
+			list[i] = null;
+			i++;
+		}
 	}
 }
