@@ -29,7 +29,7 @@ public class Semantic {
             for (int i = 0; i < auxList.length; i++) {
                 if (tokens[i] == null) break;
                 if (!tokens[i].getType().equals(auxList[j].getType())) {
-                    throw new SemanticException("Não pode calcular "+ auxList[j].getType() +" com "+tokens[i].getType());
+                    throw new SemanticException("Ei menino! Não pode calcular "+ auxList[j].getType() +" com "+tokens[i].getType());
                 }
             }
             return tokens[0].getType();

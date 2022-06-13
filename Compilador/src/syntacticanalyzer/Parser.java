@@ -107,6 +107,9 @@ public class Parser {
 				}
 			}else{
 				this.relationalExpression();
+				Semantic.verifyCalculation(auxListTokens);
+				dellList(auxListTokens);
+			    auxListTokensSize = 0;
 			}
 
 		    if (!token.getContent().equals(")")) {
@@ -173,6 +176,9 @@ public class Parser {
 			}
 		}else{
 			this.relationalExpression();
+			Semantic.verifyCalculation(auxListTokens);
+				dellList(auxListTokens);
+			    auxListTokensSize = 0;
 		}
 
 		if (!token.getContent().equals(")")) {
@@ -220,7 +226,7 @@ public class Parser {
 		}
 		Semantic aux = Semantic.exists(variableList, token.getContent());
 		if(aux == null){
-			throw new SemanticException("A variavel não existe tabacudo!");
+			throw new SemanticException("A variavel \'"+ this.token.getContent() +"\' não existe tabacudo!");
 		}
 
 		this.token = this.lexical.nextToken();
